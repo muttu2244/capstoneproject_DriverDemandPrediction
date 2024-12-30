@@ -1,0 +1,20 @@
+{
+    "name": "delivery-prediction-service",
+    "version": "1.0.0",
+    "description": "ML service for delivery time and peak demand prediction",
+    "main": "src/server.js",
+    "type": "module",
+    "scripts": {
+      "start": "node src/server.js",
+      "dev": "nodemon src/server.js"
+    },
+    "dependencies": {
+      "express": "^4.18.2",
+      "cors": "^2.8.5",
+      "dotenv": "^16.3.1",
+      "python-shell": "^5.0.0"
+    },
+    "devDependencies": {
+      "nodemon": "^3.0.2"
+    }
+  }
