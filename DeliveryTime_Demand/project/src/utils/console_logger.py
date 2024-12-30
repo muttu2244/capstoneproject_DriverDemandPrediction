@@ -23,6 +23,19 @@ def print_model_results(results: Dict[str, Dict[str, float]], best_model: str, b
     print(f"🏆 Best Model: {best_model}")
     print(f"Best R2 Score: {best_score:.4f}")
 
+def print_delivery_prediction(estimated_time: float, features: Dict[str, Any]):
+    """Print delivery time prediction to console."""
+    print_separator()
+    print("DELIVERY TIME PREDICTION")
+    print_separator()
+    
+    print(f"Estimated delivery time: {estimated_time:.1f} minutes")
+    print("\nOrder details:")
+    print(f"  Weather: {features['weather']}")
+    print(f"  Traffic: {features['traffic']}")
+    print(f"  Vehicle: {features['vehicle_type']}")
+    print(f"  Order time: {features['order_time']}")
+
 def print_peak_demand_forecast(prediction: Dict[str, Any]):
     """Print peak demand predictions to console."""
     print_separator()

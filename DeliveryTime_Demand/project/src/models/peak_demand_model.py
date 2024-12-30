@@ -6,6 +6,7 @@ from .base_model import BaseModel
 from .features import extract_time_features
 from ..utils.date_parsers import parse_date
 from ..utils.time_parsers import combine_date_time
+from ..utils.console_logger import print_peak_demand_forecast
 
 class PeakDemandModel(BaseModel):
     def __init__(self):
@@ -63,7 +64,9 @@ class PeakDemandModel(BaseModel):
             return {'predicted_orders': float(stats['mean'])}
             
         # Otherwise return full day prediction
-        return self.predict_next_day()
+        prediction = self.predict_next_day()
+        print_peak_demand_forecast(prediction)
+        return prediction
     
     def predict_next_day(self) -> Dict[str, Any]:
         """Predict peak demand for next day."""

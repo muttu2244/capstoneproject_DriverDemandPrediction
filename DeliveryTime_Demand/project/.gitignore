@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -20,11 +21,10 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
-venv/
-ENV/
-env/
-.env
+# Logs
+*.log
+logs/
+catboost_info/
 
 # IDE
 .idea/
@@ -32,15 +32,11 @@ env/
 *.swp
 *.swo
 
-# Model training logs and temp files
-catboost_info/
-*.log
-*.tfevents
-*.tsv
+# Environment
+.env
+.venv
+venv/
+ENV/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Local development
+# Misc
 .DS_Store
-node_modules/
