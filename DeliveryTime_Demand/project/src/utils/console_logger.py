@@ -45,9 +45,17 @@ def print_peak_demand_forecast(prediction: Dict[str, Any]):
     print(f"Total orders expected: {prediction['total_orders']:.0f}")
     print(f"Average orders per hour: {prediction['total_orders']/24:.1f}")
     
-    print("\nHourly predictions:")
+    print("\nOverall hourly predictions:")
     for hour, count in enumerate(prediction['hourly_predictions']):
         print(f"{hour:02d}:00 - {count:.1f} orders")
     
     peak_hours_str = [f"{hour:02d}:00-{(hour+1):02d}:00" for hour in prediction['peak_hours']]
-    print("\nPeak hours:", ", ".join(peak_hours_str))
+    print("\nOverall peak hours:", ", ".join(peak_hours_str))
+    
+    if 'city_predictions' in prediction:
+        print("\nCity-wise Predictions:")
+        for city, city_pred in prediction['city_predictions'].items():
+            print(f"\n{city}:")
+            print(f"  Total orders: {city_pred['total_orders']:.0f}")
+            city_peak_hours = [f"{hour:02d}:00-{(hour+1):02d}:00" for hour in city_pred['peak_hours']]
+            print(f"  Peak hours: {', '.join(city_peak_hours)}")

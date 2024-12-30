@@ -1,13 +1,14 @@
 """Main script for delivery time prediction with model comparison."""
 import pandas as pd
-from .data_processor import DataProcessor
-from .models.model_evaluator import ModelEvaluator
-from .models.peak_demand_model import PeakDemandModel
+from data_processor import DataProcessor
+from models.model_evaluator import ModelEvaluator
+from models.peak_demand_model import PeakDemandModel
+from utils.console_logger import print_separator
 
 def main():
     # Load and preprocess data
     print("Loading and preprocessing data...")
-    data = pd.read_csv('data/raw/delivery_data.csv')
+    data = pd.read_csv('data/delivery_data.csv')
     processor = DataProcessor()
     processed_data = processor.preprocess(data)
     
@@ -26,25 +27,17 @@ def main():
     # Compare models
     print("\nComparing different models...")
     evaluator = ModelEvaluator()
-    results = evaluator.evaluate_models(X, y)
+    evaluator.evaluate_models(X, y)
     
-    # Get best model
-    best_model_name, best_score = evaluator.get_best_model(metric='r2')
-    print(f"\nBest Model: {best_model_name}")
-    print(f"Best R2 Score: {best_score:.4f}")
-    
-    # Peak Demand Prediction
+    print_separator()
     print("\n=== Peak Demand Prediction ===")
+    
+    # Initialize and train peak demand model
     peak_model = PeakDemandModel()
     peak_model.train(processed_data)
-    peak_prediction = peak_model.predict_next_day()
     
-    print("\nPeak Demand Forecast:")
-    print(f"Total orders expected: {peak_prediction['total_orders']:.0f}")
-    print(f"Peak hours: {', '.join(map(str, peak_prediction['peak_hours']))}")
-    print("\nHourly predictions:")
-    for hour, count in enumerate(peak_prediction['hourly_predictions']):
-        print(f"{hour:02d}:00 - {count:.1f} orders")
+    # Get and display predictions
+    prediction = peak_model.predict()  # This will automatically print the forecast
 
 if __name__ == "__main__":
     main()
