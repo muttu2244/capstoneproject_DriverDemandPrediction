@@ -10,7 +10,7 @@ from .models import (
     CatBoostModel,
     GradientBoostingModel
 )
-from ..utils.console_logger import print_model_results
+from ..utils.console_logger import print_best_model, print_model_comparison
 
 class ModelEvaluator:
     def __init__(self):
@@ -31,19 +31,27 @@ class ModelEvaluator:
         
         for name, model in self.models.items():
             print(f"\nTraining {name}...")
-            model.train(X_train, y_train)
-            y_pred = model.predict(X_test)
-            metrics = model.calculate_metrics(y_test, y_pred)
-            self.results[name] = metrics
+            try:
+                model.train(X_train, y_train)
+                y_pred = model.predict(X_test)
+                metrics = model.calculate_metrics(y_test, y_pred)
+                self.results[name] = metrics
+            except Exception as e:
+                print(f"Error training {name}: {str(e)}")
+                continue
         
+        # Print comparison results
+        print_model_comparison(self.results)
+       
         # Get best model and print results
-        best_model_name, best_score = self.get_best_model(metric='r2')
-        print_model_results(self.results, best_model_name, best_score)
+        best_model_name, best_metrics = self.get_best_model()
+        print_best_model(best_model_name, best_metrics)
         
         return self.results
     
-    def get_best_model(self, metric: str = 'r2') -> Tuple[str, float]:
-        """Get the best performing model based on specified metric."""
-        scores = {name: results[metric] for name, results in self.results.items()}
-        best_model = max(scores.items(), key=lambda x: x[1])
-        return best_model
+
+    
+    def get_best_model(self) -> Tuple[str, Dict[str, float]]:
+        """Get the best performing model based on R² score."""
+        best_model = max(self.results.items(), key=lambda x: x[1]['r2'])
+        return best_model[0], best_model[1]

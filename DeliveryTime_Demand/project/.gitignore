@@ -37,6 +37,7 @@ catboost_info/
 .venv
 venv/
 ENV/
+DeliveryTime_Demand/venv/
 
 # Misc
 .DS_Store

@@ -1,92 +1,120 @@
-"""Peak demand prediction model with city-wise analysis."""
+"""Peak demand prediction model."""
 import pandas as pd
 import numpy as np
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from .base_model import BaseModel
-from .features import extract_time_features
-from ..utils.date_parsers import parse_date
-from ..utils.time_parsers import combine_date_time
-from ..utils.console_logger import print_peak_demand_forecast
+from ..utils.type_conversion import extract_hour
 
 class PeakDemandModel(BaseModel):
     def __init__(self):
         self.hourly_patterns = {}
         self.city_patterns = {}
     
-    def _prepare_data(self, data: pd.DataFrame) -> Dict[str, pd.DataFrame]:
-        """Prepare time series data for peak demand prediction."""
-        df = data.copy()
-        
-        # Parse dates and times
-        df['datetime'] = df.apply(
-            lambda row: combine_date_time(
-                parse_date(row['Order_Date']),
-                row['Time_Orderd']
-            ),
-            axis=1
-        )
-        
-        # Remove rows with NaN values
-        df = df.dropna(subset=['datetime', 'City'])
-        
-        # Group by hour and count orders (overall)
-        hourly_orders = (
-            df.groupby([pd.Grouper(key='datetime', freq='H')])
-            .size()
-            .reset_index(name='order_count')
-        )
-        
-        # Group by city and hour
-        city_orders = {}
-        for city in df['City'].unique():
-            if pd.isna(city):
-                continue
-            city_data = df[df['City'] == city]
-            city_orders[city] = (
-                city_data.groupby([pd.Grouper(key='datetime', freq='H')])
-                .size()
-                .reset_index(name='order_count')
-            )
-        
-        return {
-            'overall': hourly_orders,
-            'by_city': city_orders
-        }
-    
     def train(self, data: pd.DataFrame) -> Dict[str, float]:
         """Train the peak demand prediction model."""
         try:
-            # Prepare hourly order data
-            ts_data = self._prepare_data(data)
+            # Preprocess data
+            df = self._prepare_time_series(data)
             
-            # Calculate overall hourly patterns
-            overall_patterns = (
-                ts_data['overall'].groupby(ts_data['overall']['datetime'].dt.hour)['order_count']
-                .agg(['mean', 'std'])
-            )
-            self.hourly_patterns = {
-                hour: {'mean': round(row['mean']), 'std': row['std']}
-                for hour, row in overall_patterns.iterrows()
+            # Calculate patterns
+            self._calculate_patterns(df)
+            
+            return {
+                "status": "success",
+                "message": "Model trained successfully",
+                "hourly_patterns": len(self.hourly_patterns),
+                "city_patterns": len(self.city_patterns)
             }
             
-            # Calculate city-wise patterns
-            self.city_patterns = {}
-            for city, city_data in ts_data['by_city'].items():
-                if pd.isna(city):
-                    continue
-                city_patterns = (
-                    city_data.groupby(city_data['datetime'].dt.hour)['order_count']
-                    .agg(['mean', 'std'])
-                )
-                self.city_patterns[city] = {
-                    hour: {'mean': round(row['mean']), 'std': row['std']}
-                    for hour, row in city_patterns.iterrows()
-                }
-            
-            return {"status": "success", "message": "Model trained successfully"}
-            
         except Exception as e:
-            raise RuntimeError(f"Error training peak demand model: {str(e)}")
+            raise RuntimeError(f"Error training model: {str(e)}")
+    
+    def _prepare_time_series(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Prepare time series data for analysis."""
+        df = data.copy()
+        
+        # Extract hour from Time_Orderd
+        if 'Time_Orderd' in df.columns:
+            df['hour'] = df['Time_Orderd'].apply(extract_hour)
+        elif 'hour' not in df.columns:
+            raise ValueError("No time column found in data")
+            
+        # Add order count if not present
+        if 'order_count' not in df.columns:
+            df['order_count'] = 1
+            
+        return df
+    
+    def _calculate_patterns(self, df: pd.DataFrame) -> None:
+        """Calculate hourly and city-wise patterns."""
+        # Calculate overall hourly patterns
+        hourly_stats = df.groupby('hour')['order_count'].agg(['mean', 'std'])
+        self.hourly_patterns = {
+            int(hour): {
+                'mean': float(row['mean']),
+                'std': float(row['std'])
+            }
+            for hour, row in hourly_stats.iterrows()
+        }
+        
+        # Calculate city-wise patterns if available
+        if 'City_encoded' in df.columns:
+            for city_code in df['City_encoded'].unique():
+                city_data = df[df['City_encoded'] == city_code]
+                city_stats = city_data.groupby('hour')['order_count'].agg(['mean', 'std'])
+                self.city_patterns[int(city_code)] = {
+                    int(hour): {
+                        'mean': float(row['mean']),
+                        'std': float(row['std'])
+                    }
+                    for hour, row in city_stats.iterrows()
+                }
+    
+    def _predict_orders(self, patterns: Dict[int, Dict[str, float]]) -> List[float]:
+        """Predict hourly orders using patterns."""
+        predictions = []
+        for hour in range(24):
+            hour_stats = patterns.get(hour, {'mean': 0.0, 'std': 0.0})
+            predictions.append(round(float(hour_stats['mean'])))
+        return predictions
+    
+    def predict_next_day(self, city_code: Optional[int] = None) -> Dict[str, Any]:
+        """Predict peak demand for next day."""
+        if not self.hourly_patterns:
+            raise RuntimeError("Model must be trained before making predictions")
+        
+        # Get patterns based on city
+        patterns = (
+            self.city_patterns.get(city_code, self.hourly_patterns)
+            if city_code is not None
+            else self.hourly_patterns
+        )
+        
+        # Generate predictions
+        predictions = self._predict_orders(patterns)
+        
+        # Identify peak hours (hours with demand > mean + std)
+        mean_demand = np.mean(predictions)
+        std_demand = np.std(predictions)
+        peak_hours = [
+            hour for hour, pred in enumerate(predictions)
+            if pred > mean_demand + std_demand
+        ]
+        
+        result = {
+            'total_orders': int(sum(predictions)),
+            'peak_hours': peak_hours,
+            'hourly_predictions': predictions
+        }
+        
+        # Add city-wise predictions if available
+        if city_code is None and self.city_patterns:
+            result['city_predictions'] = {
+                city: self.predict_next_day(city)
+                for city in self.city_patterns.keys()
+            }
+        
+        return result
     
     def predict(self, features: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make predictions using the trained model."""
@@ -106,48 +134,4 @@ class PeakDemandModel(BaseModel):
             return {'predicted_orders': round(stats['mean'])}
             
         # Otherwise return full day prediction
-        prediction = self.predict_next_day()
-        # Only print once from the main prediction call
-        if not features:
-            print_peak_demand_forecast(prediction)
-        return prediction
-    
-    def predict_next_day(self, city: Optional[str] = None) -> Dict[str, Any]:
-        """Predict peak demand for next day, optionally for a specific city."""
-        if not self.hourly_patterns:
-            raise RuntimeError("Model must be trained before making predictions")
-        
-        # Get patterns based on city
-        patterns = self.city_patterns.get(city, self.hourly_patterns) if city else self.hourly_patterns
-        
-        # Get hourly predictions (rounded to integers)
-        predictions = []
-        for hour in range(24):
-            hour_stats = patterns.get(hour, {'mean': 0, 'std': 0})
-            predictions.append(round(hour_stats['mean']))
-        
-        # Identify peak hours (hours with demand > mean + std)
-        mean_demand = np.mean(predictions)
-        std_demand = np.std(predictions)
-        peak_hours = [
-            hour for hour, pred in enumerate(predictions)
-            if pred > mean_demand + std_demand
-        ]
-        
-        result = {
-            'total_orders': sum(predictions),  # Already rounded
-            'peak_hours': peak_hours,
-            'hourly_predictions': predictions,  # Already rounded
-        }
-        
-        # Add city-specific predictions if available
-        if city:
-            result['city'] = city
-        else:
-            # Add city-wise breakdown
-            result['city_predictions'] = {
-                city: self.predict_next_day(city)
-                for city in self.city_patterns.keys()
-            }
-        
-        return result
+        return self.predict_next_day()

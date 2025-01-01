@@ -1,59 +1,47 @@
-"""Interactive dashboard for delivery analytics."""
+"""Entry point for the Streamlit dashboard."""
 import streamlit as st
-from src.dashboard.data_loader import load_dashboard_data
-from src.dashboard.filters import create_sidebar_filters, apply_filters
-from src.dashboard.visualizations import (
-    plot_delivery_time_distribution,
-    plot_weather_impact,
-    plot_traffic_impact,
-    plot_hourly_patterns
-)
-from src.dashboard.model_metrics import display_model_metrics, display_peak_demand_forecast
+from src.data.data_loader import load_processed_data
+from src.dashboard.components.city_analysis import display_city_analysis
+from src.dashboard.components.delivery_analysis import display_delivery_analysis
+from src.dashboard.components.chatbot_interface import display_chatbot_interface
+from src.dashboard.components.metrics import display_basic_metrics
+from src.dashboard.components.filters import create_filters
+from src.dashboard.utils.filter_utils import filter_data
 
-# Page config
-st.set_page_config(
-    page_title="Delivery Analytics Dashboard",
-    page_icon="🚚",
-    layout="wide"
-)
+def main():
+    """Main dashboard function."""
+    st.set_page_config(
+        page_title="Delivery Analytics",
+        page_icon="🚚",
+        layout="wide"
+    )
 
-# Title
-st.title("🚚 Delivery Analytics Dashboard")
-
-try:
-    # Load data
-    data = load_dashboard_data()
+    st.title("🚚 Delivery Analytics Dashboard")
     
-    # Create filters
-    date_range, selected_weather, selected_traffic = create_sidebar_filters(data)
+    # Load processed data
+    data = load_processed_data()
     
-    # Apply filters
-    filtered_data = apply_filters(data, date_range, selected_weather, selected_traffic)
-    
-    # Create visualizations
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📊 Delivery Time Distribution")
-        plot_delivery_time_distribution(filtered_data)
+    if data is not None:
+        # Create and apply filters
+        date_range, weather, traffic = create_filters()
+        filtered_data = filter_data(data, date_range, weather, traffic)
         
-        st.subheader("🌦️ Weather Impact on Delivery Time")
-        plot_weather_impact(filtered_data)
-    
-    with col2:
-        st.subheader("🚦 Traffic Impact Analysis")
-        plot_traffic_impact(filtered_data)
+        # Display components
+        display_basic_metrics(filtered_data)
         
-        st.subheader("📈 Hourly Order Patterns")
-        plot_hourly_patterns(filtered_data)
-    
-    # Display model metrics and peak demand forecast
-    st.markdown("---")
-    display_model_metrics(filtered_data)
-    
-    st.markdown("---")
-    display_peak_demand_forecast(filtered_data)
+        # Create two columns for analysis
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            display_city_analysis(filtered_data)
+            
+        with col2:
+            display_delivery_analysis(filtered_data)
+        
+        # Display chatbot interface
+        display_chatbot_interface(filtered_data)
+    else:
+        st.error("No data available. Please check your data source.")
 
-except Exception as e:
-    st.error(f"Error loading data: {str(e)}")
-    st.info("Please ensure you have the required data file in the data directory.")
+if __name__ == "__main__":
+    main()

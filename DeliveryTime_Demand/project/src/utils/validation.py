@@ -1,5 +1,5 @@
 """Input validation utilities."""
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 def validate_coordinates(lat: float, lng: float) -> None:
     """Validate latitude and longitude values."""
@@ -21,6 +21,7 @@ def validate_order_data(order_data: Dict[str, Any]) -> None:
         'order_time': str
     }
     
+    # Check required fields
     for field, field_type in required_fields.items():
         if field not in order_data:
             raise ValueError(f"Missing required field: {field}")
@@ -30,3 +31,18 @@ def validate_order_data(order_data: Dict[str, Any]) -> None:
     # Validate coordinates
     validate_coordinates(order_data['restaurant_lat'], order_data['restaurant_lng'])
     validate_coordinates(order_data['delivery_lat'], order_data['delivery_lng'])
+    
+    # Validate weather conditions
+    valid_weather = {'Clear', 'Cloudy', 'Fog', 'Rain', 'Storm'}
+    if order_data['weather'] not in valid_weather:
+        raise ValueError(f"Invalid weather condition. Must be one of: {', '.join(valid_weather)}")
+    
+    # Validate traffic conditions
+    valid_traffic = {'Low', 'Medium', 'High', 'Jam'}
+    if order_data['traffic'] not in valid_traffic:
+        raise ValueError(f"Invalid traffic condition. Must be one of: {', '.join(valid_traffic)}")
+    
+    # Validate vehicle type
+    valid_vehicles = {'motorcycle', 'scooter', 'bicycle'}
+    if order_data['vehicle_type'].lower() not in valid_vehicles:
+        raise ValueError(f"Invalid vehicle type. Must be one of: {', '.join(valid_vehicles)}")

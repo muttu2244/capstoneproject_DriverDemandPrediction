@@ -1,94 +1,44 @@
+# run.py
 """Main entry point for the delivery prediction service."""
-import os
-from typing import Dict, Any
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import uvicorn
-
-from src.main import main
+import argparse
 from src.data_processor import DataProcessor
 from src.models.delivery_time_model import DeliveryTimeModel
 from src.models.peak_demand_model import PeakDemandModel
-from src.utils.validation import validate_order_data
+import pandas as pd
 
-# Create FastAPI app
-app = FastAPI(title="Delivery Prediction Service")
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Request/Response models
-class OrderRequest(BaseModel):
-    restaurant_lat: float
-    restaurant_lng: float
-    delivery_lat: float
-    delivery_lng: float
-    weather: str
-    traffic: str
-    vehicle_type: str
-    order_time: str
-
-class DeliveryTimeResponse(BaseModel):
-    estimated_time: float
-    unit: str
-
-class PeakDemandResponse(BaseModel):
-    total_orders: float
-    peak_hours: list
-    hourly_predictions: list
-
-# Initialize models
-delivery_model = DeliveryTimeModel()
-peak_model = PeakDemandModel()
-processor = DataProcessor()
-
-@app.get("/")
-async def root():
-    return {"message": "Delivery Prediction Service API"}
-
-@app.post("/api/predict/delivery-time", response_model=DeliveryTimeResponse)
-async def predict_delivery_time(order: OrderRequest):
+def train_main():
+    """Train the models."""
     try:
-        # Validate order data
-        order_dict = order.dict()
-        validate_order_data(order_dict)
+        # Initialize data processor
+        processor = DataProcessor()
         
-        # Process order data
-        processed_order = processor.process_single_order(order_dict)
+        print("Loading and preprocessing data...")
+        data = pd.read_csv('data/raw/delivery_data.csv')
+        processed_data = processor.preprocess(data)
         
-        # Make prediction
-        estimated_time = delivery_model.predict(processed_order)
+        print("\n=== Training Delivery Time Model ===")
+        delivery_model = DeliveryTimeModel()
+        delivery_metrics = delivery_model.train(processed_data)
         
-        return {
-            "estimated_time": float(estimated_time),
-            "unit": "minutes"
-        }
+        print("\n=== Training Peak Demand Model ===")
+        peak_model = PeakDemandModel()
+        peak_metrics = peak_model.train(processed_data)
+        
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"Error loading/training models: {str(e)}")
 
-@app.post("/api/predict/peak-demand", response_model=PeakDemandResponse)
-async def predict_peak_demand():
-    try:
-        prediction = peak_model.predict_next_day()
-        return {
-            "total_orders": float(prediction['total_orders']),
-            "peak_hours": prediction['peak_hours'],
-            "hourly_predictions": prediction['hourly_predictions']
-        }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+def main():
+    parser = argparse.ArgumentParser(description='Delivery prediction service')
+    parser.add_argument('--mode', choices=['train', 'serve'], default='serve',
+                      help='Run mode: train models or serve predictions')
+    
+    args = parser.parse_args()
+    
+    if args.mode == 'train':
+        train_main()
+    else:
+        # Add API server mode here if needed
+        pass
 
 if __name__ == "__main__":
-    if os.environ.get("API_MODE"):
-        # Run as API server
-        uvicorn.run(app, host="0.0.0.0", port=8000)
-    else:
-        # Run model training and evaluation
-        main()
+    main()

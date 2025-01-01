@@ -2,26 +2,50 @@
 import sys
 from typing import Dict, Any
 
-def print_separator():
+def print_separator(char="=", length=80):
     """Print a separator line."""
-    print("\n" + "="*80 + "\n")
+    print(f"\n{char * length}\n")
 
-def print_model_results(results: Dict[str, Dict[str, float]], best_model: str, best_score: float):
-    """Print model evaluation results to console."""
+def print_model_comparison(results: Dict[str, Dict[str, float]], best_model: str = None, best_score: float = None):
+    """Print detailed model comparison results."""
     print_separator()
-    print("MODEL EVALUATION RESULTS")
+    print("MODEL COMPARISON RESULTS")
     print_separator()
     
+    # Print header
+    headers = ["Model", "MSE", "RMSE", "MAE", "MAPE", "R²"]
+    header_format = "{:<15} {:<10} {:<10} {:<10} {:<10} {:<10}"
+    print(header_format.format(*headers))
+    print("-" * 65)
+    
+    # Print each model's results
+    row_format = "{:<15} {:<10.2f} {:<10.2f} {:<10.2f} {:<10.2f} {:<10.4f}"
     for model_name, metrics in results.items():
-        print(f"{model_name}:")
-        print(f"  MSE:  {metrics['mse']:.2f}")
-        print(f"  RMSE: {metrics['rmse']:.2f}")
-        print(f"  MAE:  {metrics['mae']:.2f}")
-        print(f"  MAPE: {metrics['mape']:.2f}%")
-        print(f"  R2:   {metrics['r2']:.4f}\n")
+        print(row_format.format(
+            model_name,
+            metrics['mse'],
+            metrics['rmse'],
+            metrics['mae'],
+            metrics['mape'],
+            metrics['r2']
+        ))
     
-    print(f"🏆 Best Model: {best_model}")
-    print(f"Best R2 Score: {best_score:.4f}")
+    # Print best model if provided
+    if best_model and best_score:
+        print_separator("-", 65)
+        print(f"🏆 Best Model: {best_model}")
+        print(f"Best R² Score: {best_score:.4f}")
+
+def print_best_model(model_name: str, metrics: Dict[str, float]):
+    """Print best model results."""
+    print_separator()
+    print("🏆 BEST MODEL RESULTS")
+    print_separator()
+    print(f"Best Model: {model_name}")
+    print(f"R² Score: {metrics['r2']:.4f}")
+    print(f"RMSE: {metrics['rmse']:.2f}")
+    print(f"MAE: {metrics['mae']:.2f}")
+    print(f"MAPE: {metrics['mape']:.2f}%")
 
 def print_delivery_prediction(estimated_time: float, features: Dict[str, Any]):
     """Print delivery time prediction to console."""

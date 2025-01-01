@@ -1,42 +1,56 @@
 """Time-based feature extraction."""
 import pandas as pd
 import numpy as np
-from typing import Dict
-from ...utils.date_parsers import parse_date
-from ...utils.time_parsers import decimal_to_hour
+from typing import Dict, Any, Optional
+from ...utils.time_parsers import parse_time_string
 
-def extract_time_features(data: pd.DataFrame) -> pd.DataFrame:
-    """Extract time-based features from order data."""
-    df = data.copy()
+def extract_time_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Extract time-based features from datetime columns."""
+    df = df.copy()
     
     try:
-        # Convert Time_Orderd to hour (0-23)
-        df['hour'] = df['Time_Orderd'].apply(decimal_to_hour)
+        # Extract hour from available time columns
+        time_columns = ['Time_Orderd', 'Time_Order', 'order_time']
+        hour_extracted = False
         
-        # Handle case where all hours are NaN
-        if df['hour'].isna().all():
-            df['hour'] = 12  # Set default hour
-        else:
-            # Fill missing hours with median of non-NaN values
-            median_hour = int(df['hour'].dropna().median())
-            df['hour'] = df['hour'].fillna(median_hour)
+        for col in time_columns:
+            if col in df.columns:
+                try:
+                    df['hour'] = df[col].apply(lambda x: extract_hour(x) if pd.notna(x) else 12)
+                    hour_extracted = True
+                    break
+                except Exception:
+                    continue
         
-        # Extract day of week from Order_Date
-        df['day_of_week'] = df['Order_Date'].apply(
-            lambda x: parse_date(x).dayofweek if pd.notna(x) else 3  # Default to Wednesday
-        )
+        # If no time column was successfully processed, set default hour
+        if not hour_extracted:
+            df['hour'] = 12
         
-        # Handle case where all days are NaN
-        if df['day_of_week'].isna().all():
-            df['day_of_week'] = 3  # Set default to Wednesday
-        else:
-            # Fill missing days with median of non-NaN values
-            median_day = int(df['day_of_week'].dropna().median())
-            df['day_of_week'] = df['day_of_week'].fillna(median_day)
-        
-        # Calculate weekend flag
-        df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
+        # Ensure hour is integer
+        df['hour'] = df['hour'].astype('Int64')
         
         return df
+        
     except Exception as e:
         raise ValueError(f"Error extracting time features: {str(e)}")
+
+def extract_hour(time_value: Any) -> int:
+    """Extract hour from time value with robust error handling."""
+    try:
+        # Handle NaN/None
+        if pd.isna(time_value):
+            return 12
+            
+        # Convert to string
+        time_str = str(time_value).strip()
+        
+        # Parse time string
+        hour = parse_time_string(time_str)
+        
+        # Validate hour
+        if 0 <= hour < 24:
+            return hour
+        return 12
+        
+    except Exception:
+        return 12  # Default to noon on any error
