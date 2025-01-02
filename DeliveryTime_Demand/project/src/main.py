@@ -1,8 +1,8 @@
 """Main script for delivery time prediction with model comparison."""
 import pandas as pd
-from .data_processor import DataProcessor
-from .models.model_evaluator import ModelEvaluator
-from .models.peak_demand_model import PeakDemandModel
+from src.data_processor import DataProcessor
+from src.models.model_evaluator import ModelEvaluator
+from src.models.peak_demand_model import PeakDemandModel
 
 def main():
     # Load and preprocess data
