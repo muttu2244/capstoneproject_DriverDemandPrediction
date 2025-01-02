@@ -31,8 +31,8 @@ class DeliveryTimeModel(BaseModel):
     
     def train(self, X_train, y_train, X_val=None, y_val=None):
         """Train the model."""
-        print(f" x train cols are: {X_train.columns}")
-        print(f" y train cols are: {y_train}")
+        #print(f" x train cols are: {X_train.columns}")
+        #print(f" y train cols are: {y_train}")
         if X_val is not None and y_val is not None:
             eval_set = [(X_val, y_val)]
             self.model.fit(
@@ -57,8 +57,8 @@ class DeliveryTimeModel(BaseModel):
         Returns:
             Array of predicted delivery times in minutes
         """
-        for (index, col), value in features.stack().items():
-            print(f"******* Features in Predict  ... Row {index}, Column {col}: {value}********")
+        #for (index, col), value in features.stack().items():
+        #    print(f"******* Features in Predict  ... Row {index}, Column {col}: {value}********")
         if not self.is_trained:
             raise RuntimeError("Model must be trained before making predictions")
             

@@ -6,7 +6,7 @@ from src.dashboard.components.delivery_analysis import display_delivery_analysis
 from src.dashboard.components.chatbot_interface import display_chatbot_interface
 from src.dashboard.components.metrics import display_basic_metrics
 from src.dashboard.components.filters import create_filters
-from src.dashboard.utils.filter_utils import filter_data
+from src.utils.filter_utils import filter_data
 
 def main():
     """Main dashboard function."""

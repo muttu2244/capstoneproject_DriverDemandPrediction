@@ -3,6 +3,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 from typing import Dict, Any
+from src.data.processor import DataProcessor
 
 def display_delivery_analysis(data: pd.DataFrame) -> None:
     """Display comprehensive delivery time analysis."""
@@ -73,9 +74,10 @@ def display_delivery_analysis(data: pd.DataFrame) -> None:
             title="Delivery Time vs Distance"
         )
         st.plotly_chart(fig, use_container_width=True)
-
+        
+"""
 def analyze_weather_impact(data: pd.DataFrame) -> pd.DataFrame:
-    """Analyze weather impact on delivery times."""
+    '''Analyze weather impact on delivery times.'''
     return data.groupby('Weatherconditions').agg({
         'time_taken(min)': ['mean', 'std', 'count']
     }).reset_index().rename(columns={
@@ -85,8 +87,26 @@ def analyze_weather_impact(data: pd.DataFrame) -> pd.DataFrame:
         'count': 'orders'
     })
 
+""" 
+
+def analyze_weather_impact(data: pd.DataFrame) -> pd.DataFrame:
+    """Analyze weather impact on delivery times."""
+    # Group by weather conditions and calculate metrics
+    weather_impact = data.groupby('Weatherconditions').agg(
+        avg_time=('time_taken(min)', 'mean'),
+        std_time=('time_taken(min)', 'std'),
+        orders=('time_taken(min)', 'count')
+    ).reset_index()
+
+    # Rename columns for clarity
+    weather_impact = weather_impact.rename(columns={'Weatherconditions': 'condition'})
+
+    return weather_impact
+
+
+"""
 def analyze_traffic_impact(data: pd.DataFrame) -> pd.DataFrame:
-    """Analyze traffic impact on delivery times."""
+    '''Analyze traffic impact on delivery times.'''
     return data.groupby('Road_traffic_density').agg({
         'time_taken(min)': ['mean', 'std', 'count']
     }).reset_index().rename(columns={
@@ -95,9 +115,48 @@ def analyze_traffic_impact(data: pd.DataFrame) -> pd.DataFrame:
         'std': 'std_time',
         'count': 'orders'
     })
+""" 
+def analyze_traffic_impact(data: pd.DataFrame) -> pd.DataFrame:
+    """Analyze traffic impact on delivery times."""
+    # Group by traffic density and calculate metrics
+    traffic_impact = data.groupby('Road_traffic_density').agg(
+        avg_time=('time_taken(min)', 'mean'),
+        std_time=('time_taken(min)', 'std'),
+        orders=('time_taken(min)', 'count')
+    ).reset_index()
+
+    # Rename columns for clarity
+    traffic_impact = traffic_impact.rename(columns={'Road_traffic_density': 'level'})
+
+    return traffic_impact
+
+"""
+def analyze_distance_impact(data: pd.DataFrame) -> pd.DataFrame:
+    '''Analyze distance impact on delivery times.'''
+    data = data.copy()
+    dp = DataProcessor
+    data['distance'] = dp._calculate_distances(data)
+    return data
+"""
 
 def analyze_distance_impact(data: pd.DataFrame) -> pd.DataFrame:
     """Analyze distance impact on delivery times."""
-    data = data.copy()
-    data['distance'] = calculate_distances(data)
-    return data
+    try:
+        # Ensure a copy to avoid mutating the original DataFrame
+        data = data.copy()
+        
+        # Calculate distances and ensure alignment
+        dp = DataProcessor()
+        data = dp._calculate_distances(data)
+        
+        # Check if the distance column exists and has the correct length
+        if 'distance' not in data.columns or len(data['distance']) != len(data):
+            raise ValueError("Distance calculation failed or resulted in a mismatch.")
+        
+        # Filter required columns and drop any rows with missing values
+        result = data[['distance', 'time_taken(min)']].dropna()
+        return result
+    
+    except Exception as e:
+        print(f"Error analyzing distance impact: {str(e)}")
+        return pd.DataFrame()  # Return an empty DataFrame to handle errors gracefully

@@ -36,9 +36,7 @@ class DataProcessor:
             df = data.copy()
             
             # Drop ID columns if they exist
-            id_columns = ['ID', 'Delivery_person_ID','Order_Date', 'Time_Orderd', 'Time_Order_picked',
-                          'Weatherconditions','Road_traffic_density','Type_of_vehicle','Type_of_order',
-                          'Festival','city']
+            id_columns = ['ID', 'Delivery_person_ID']
             #id_columns = ['ID']
             df = df.drop(columns=[col for col in id_columns if col in df.columns])
             

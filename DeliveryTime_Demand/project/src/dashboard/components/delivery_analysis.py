@@ -20,8 +20,9 @@ def display_delivery_analysis(data: pd.DataFrame) -> None:
         st.metric("Peak Traffic Time", f"{peak_traffic_time:.1f} min")
     
     with col3:
-        weather_impact = data[data['Weatherconditions'] != 'Clear']['time_taken(min)'].mean() - \
-                        data[data['Weatherconditions'] == 'Clear']['time_taken(min)'].mean()
+        #weather_impact = data[data['Weatherconditions'] != 'Clear']['time_taken(min)'].mean() - \
+        #                data[data['Weatherconditions'] == 'Clear']['time_taken(min)'].mean()
+        weather_impact = data[data['Weatherconditions'] != 'Clear']['time_taken(min)'].mean()
         st.metric("Weather Impact", f"+{weather_impact:.1f} min")
     
     with col4:

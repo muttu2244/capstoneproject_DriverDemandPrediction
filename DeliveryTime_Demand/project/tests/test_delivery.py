@@ -35,10 +35,12 @@ def test_delivery_prediction():
         data = pd.read_csv('data/raw/delivery_data.csv')
         processor = DataProcessor()
         processed_data = processor.preprocess(data)
-        print(f"*********dataframe in test_delivery_prediction {processed_data.columns}***********")
+        #print(f"*********dataframe in test_delivery_prediction {processed_data.columns}***********")
         # Train model
         
-        X, y = processed_data.drop(['time_taken(min)'], axis=1), processed_data['time_taken(min)']
+        #X, y = processed_data.drop(['time_taken(min)'], axis=1), processed_data['time_taken(min)']
+        X, y = processed_data.drop(['time_taken(min)','Weatherconditions','Road_traffic_density','Type_of_order','Type_of_vehicle','City','Festival', 'Order_Date', 'Time_Orderd',
+       'Time_Order_picked'], axis=1), processed_data['time_taken(min)']
         #X, y = processed_data
         model = DeliveryTimeModel()
         model.train(X, y)
@@ -49,7 +51,7 @@ def test_delivery_prediction():
         # Test predictions
         for i, order in enumerate(orders, 1):
             features = prepare_prediction_features(order)
-            print(f"*********features being sent to predict {features.columns}***********")
+            #print(f"*********features being sent to predict {features.columns}***********")
             time = model.predict(features)[0]
             
             print(f"\nOrder {i}:")

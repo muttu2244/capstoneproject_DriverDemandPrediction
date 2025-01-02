@@ -62,6 +62,7 @@ def display_demand_analysis(data: pd.DataFrame) -> None:
         peak_demand = analyze_peak_demand(data)
         display_peak_demand_insights(peak_demand)
 
+'''
 def analyze_hourly_demand(data: pd.DataFrame) -> pd.DataFrame:
     """Analyze hourly demand patterns."""
     return data.groupby('hour').agg({
@@ -71,14 +72,35 @@ def analyze_hourly_demand(data: pd.DataFrame) -> pd.DataFrame:
         'mean': 'avg_orders',
         'std': 'std_orders'
     })
+''' 
+def analyze_hourly_demand(data: pd.DataFrame) -> pd.DataFrame:
+    """Analyze hourly demand patterns."""
+    hourly = data.groupby('hour')['order_count'].agg(['count', 'mean', 'std']).reset_index()
+    hourly = hourly.rename(columns={
+        'count': 'orders',
+        'mean': 'avg_orders',
+        'std': 'std_orders'
+    })
+    return hourly
 
+
+'''
 def analyze_daily_demand(data: pd.DataFrame) -> pd.DataFrame:
     """Analyze daily demand patterns."""
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     daily = data.groupby('day_of_week').size().reset_index(name='orders')
     daily['day'] = daily['day_of_week'].map(dict(enumerate(days)))
     return daily
+'''
+def analyze_daily_demand(data: pd.DataFrame) -> pd.DataFrame:
+    """Analyze daily demand patterns."""
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    daily = data.groupby('day_of_week').size().reset_index(name='orders')
+    daily['day'] = daily['day_of_week'].map(lambda x: days[int(x)] if str(x).isdigit() else x)
+    return daily[['day', 'orders']]
 
+
+'''
 def create_demand_heatmap(data: pd.DataFrame) -> go.Figure:
     """Create geographic demand heatmap."""
     return px.density_mapbox(
@@ -91,7 +113,25 @@ def create_demand_heatmap(data: pd.DataFrame) -> go.Figure:
         zoom=11,
         mapbox_style="carto-positron"
     )
+'''
+def create_demand_heatmap(data: pd.DataFrame) -> go.Figure:
+    """Create geographic demand heatmap."""
+    fig = px.density_mapbox(
+        data,
+        lat='Delivery_location_latitude',
+        lon='Delivery_location_longitude',
+        z=None,  # No additional data aggregation
+        radius=10,
+        center=dict(lat=data['Delivery_location_latitude'].mean(), 
+                    lon=data['Delivery_location_longitude'].mean()),
+        zoom=11,
+        mapbox_style="carto-positron"
+    )
+    return fig
 
+
+
+'''
 def analyze_peak_demand(data: pd.DataFrame) -> Dict[str, Any]:
     """Analyze peak demand patterns."""
     hourly_orders = data.groupby('hour').size()
@@ -105,6 +145,26 @@ def analyze_peak_demand(data: pd.DataFrame) -> Dict[str, Any]:
         'max_orders': hourly_orders.max(),
         'peak_hour_stats': hourly_orders[peak_hours].to_dict()
     }
+
+''' 
+
+def analyze_peak_demand(data: pd.DataFrame) -> Dict[str, Any]:
+    """Analyze peak demand patterns."""
+    hourly_orders = data.groupby('hour').size().reset_index(name='orders')
+    mean_orders = hourly_orders['orders'].mean()
+    std_orders = hourly_orders['orders'].std()
+    peak_hours = hourly_orders[hourly_orders['orders'] > (mean_orders + std_orders)]['hour'].tolist()
+    
+    peak_hour_stats = hourly_orders[hourly_orders['hour'].isin(peak_hours)].set_index('hour')['orders'].to_dict()
+
+    return {
+        'peak_hours': peak_hours,
+        'mean_orders': mean_orders,
+        'max_orders': hourly_orders['orders'].max(),
+        'peak_hour_stats': peak_hour_stats
+    }
+
+
 
 def display_peak_demand_insights(peak_data: Dict[str, Any]) -> None:
     """Display peak demand insights."""

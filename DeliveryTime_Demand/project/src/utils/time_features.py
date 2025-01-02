@@ -13,7 +13,7 @@ def extract_time_features(df: pd.DataFrame) -> pd.DataFrame:
     try:
         # Convert Order_Date to datetime if not already
         if 'Order_Date' in df.columns:
-            df['Order_Date'] = pd.to_datetime(df['Order_Date'])
+            df['Order_Date'] = pd.to_datetime(df['Order_Date'],format="%d-%m-%Y", errors='coerce')
             
             # Extract hour from Time_Orderd if available
             if 'Time_Orderd' in df.columns:
