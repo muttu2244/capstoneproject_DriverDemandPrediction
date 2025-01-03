@@ -34,13 +34,13 @@ def main():
     try:
         # Load data
         data = load_dashboard_data()
-        
+        #print(f"**************************** the data is {data} ******************************")
         if not data.empty:
             # Create and apply filters
             #filters = create_filters(data)
             #filters = create_filters()
             #filtered_data = filters.apply_filters(data)
-            #date_range, weather, traffic = create_filters()
+            date_range, weather, traffic = create_filters()
             filtered_data = filter_data(data, date_range, weather, traffic)
             
             # Display components
@@ -61,16 +61,17 @@ def main():
             
             # Display delivery time analysis
             with delivery_section:
-                #display_delivery_analysis(filtered_data)
-                display_delivery_analysis(data)
+                display_delivery_analysis(filtered_data)
+                #display_delivery_analysis(data)
             
             # Display demand analysis
             with demand_section:
-                #display_demand_analysis(filtered_data)
-                display_demand_analysis(data)
+                display_demand_analysis(filtered_data)
+                #display_demand_analysis(data)
                 
             with city_analysis:
-                display_city_analysis(data)
+                display_city_analysis(filtered_data)
+                
                 
         else:
             st.error("No data available. Please check your data source.")
