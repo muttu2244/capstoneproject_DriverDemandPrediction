@@ -2,7 +2,7 @@
 import streamlit as st
 from typing import Tuple
 
-def create_layout() -> Tuple[st.container, st.container, st.container]:
+def create_layout() -> Tuple[st.container, st.container, st.container, st.container]:
     """Create main dashboard layout."""
     # Create main containers
     header = st.container()
@@ -12,5 +12,9 @@ def create_layout() -> Tuple[st.container, st.container, st.container]:
     st.markdown("---")
     
     demand_section = st.container()
+    st.markdown("---")
+
+    city_analysis = st.container()
+    st.markdown("---")
     
-    return header, delivery_section, demand_section
+    return header, delivery_section, demand_section,city_analysis

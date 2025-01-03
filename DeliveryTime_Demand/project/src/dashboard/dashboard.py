@@ -11,6 +11,7 @@ from src.utils.filter_utils import filter_data
 from src.dashboard.components.metrics import display_basic_metrics
 from src.dashboard.components.city_analysis import display_city_analysis
 from src.dashboard.components.chatbot_interface import display_chatbot_interface
+from src.dashboard.components.city_analysis import display_city_analysis
 
 def main():
     """Main dashboard function."""
@@ -21,7 +22,7 @@ def main():
     )
 
     # Create main layout
-    header, delivery_section, demand_section = create_layout()
+    header, delivery_section, demand_section, city_analysis = create_layout()
     
     with header:
         st.title("🚚 Delivery Analytics Dashboard")
@@ -40,7 +41,7 @@ def main():
             #filters = create_filters()
             #filtered_data = filters.apply_filters(data)
             #date_range, weather, traffic = create_filters()
-            #filtered_data = filter_data(data, date_range, weather, traffic)
+            filtered_data = filter_data(data, date_range, weather, traffic)
             
             # Display components
             #display_basic_metrics(filtered_data)
@@ -67,6 +68,9 @@ def main():
             with demand_section:
                 #display_demand_analysis(filtered_data)
                 display_demand_analysis(data)
+                
+            with city_analysis:
+                display_city_analysis(data)
                 
         else:
             st.error("No data available. Please check your data source.")
