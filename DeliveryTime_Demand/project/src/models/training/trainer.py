@@ -12,7 +12,7 @@ class ModelTrainer:
         """Train and evaluate all models."""
         print("Preparing training data...")
         X, y = prepare_training_data(data)
-        
+        #print(f"how X and y split happening {X,y}")
         print("\nTraining and evaluating models...")
         results = self.evaluator.evaluate_models(X, y)
         

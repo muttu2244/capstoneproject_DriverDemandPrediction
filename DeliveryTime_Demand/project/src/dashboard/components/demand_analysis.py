@@ -15,7 +15,17 @@ def display_demand_analysis(data: pd.DataFrame) -> None:
         total_orders = len(data)
         st.metric("Total Orders", f"{total_orders:,}")
     with col2:
-        avg_daily = data.groupby('Order_Date').size().mean()
+        total_orders = len(data)
+        print("Total orders:", total_orders)
+
+        # Count orders by date
+        daily_counts = data.groupby(data['Order_Date']).size()
+        #print("\nDaily order counts:")
+        #print(daily_counts.head())
+
+# Calculate average
+        avg_daily = total_orders / daily_counts.shape[0]
+        #print("\nAverage daily orders:", int(avg_daily))
         st.metric("Avg Daily Orders", f"{avg_daily:.0f}")
     with col3:
         peak_hour_orders = data.groupby('hour').size().max()

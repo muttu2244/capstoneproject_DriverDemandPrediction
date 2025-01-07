@@ -8,6 +8,7 @@ from src.models.training import ModelTrainer
 from src.models.delivery_time_model import DeliveryTimeModel
 from src.models.peak_demand_model import PeakDemandModel
 from src.data_processor import DataProcessor
+from src.config.data_paths import RAW_DATA_PATH, PROCESSED_DATA_PATH
 
 def run_dashboard():
     """Run the Streamlit dashboard."""
@@ -42,6 +43,7 @@ def train_and_predict():
         processor = DataProcessor()
         model = DeliveryTimeModel()
         processed_data = processor.preprocess(data)
+        save_processed_data(processed_data)
         X = processed_data.drop(['time_taken(min)', 'Weatherconditions', 'Road_traffic_density',
                                  'Type_of_order', 'Type_of_vehicle', 'City', 'Festival', 'Order_Date',
                                  'Time_Orderd', 'Time_Order_picked'], axis=1)
@@ -54,7 +56,8 @@ def train_and_predict():
         # Peak Demand Prediction
         print("\nPeak Demand Prediction:")
         demand_model = PeakDemandModel()
-        demand_model.train(data)
+        #demand_model.train(data)
+        demand_model.train(processed_data)
         prediction = demand_model.predict_next_day()
         print(f"Total orders expected: {prediction['total_orders']}")
         print("\nPeak hours:")
@@ -63,6 +66,13 @@ def train_and_predict():
     except Exception as e:
         print(f"Error during training and prediction: {str(e)}")
         sys.exit(1)
+
+def save_processed_data(data: pd.DataFrame) -> None:
+    """Save processed data to CSV."""
+    try:
+        data.to_csv(PROCESSED_DATA_PATH, index=False)
+    except Exception as e:
+        raise RuntimeError(f"Error saving processed data: {str(e)}")
 
 def main():
     """Main function to orchestrate the components."""

@@ -9,6 +9,6 @@ def prepare_training_data(data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
     # Preprocess data
     processor = DataProcessor()
     processed_data = processor.preprocess(data)
-    
+    print(f"Proc_data in prepare_training_data function of modelsTrainingDataPrep.py {processed_data}")
     # Prepare features
     return prepare_features(processed_data)

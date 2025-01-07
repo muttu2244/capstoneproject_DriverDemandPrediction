@@ -4,6 +4,7 @@ import plotly.express as px
 import pandas as pd
 from typing import Dict, Any
 from src.data.processor import DataProcessor
+import plotly.graph_objects as go
 
 def display_delivery_analysis(data: pd.DataFrame) -> None:
     """Display comprehensive delivery time analysis."""
@@ -66,6 +67,22 @@ def display_delivery_analysis(data: pd.DataFrame) -> None:
         # Distance impact
         st.subheader("📍 Distance Impact")
         distance_impact = analyze_distance_impact(data)
+        
+        short_distance = distance_impact[distance_impact['distance'] < 10000]
+        long_distance = distance_impact[distance_impact['distance'] >= 10000]
+
+        # Create separate trend lines for each group
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=short_distance['distance'], 
+                        y=short_distance['time_taken(min)'],
+                        mode='markers',
+                        name='Short Distance'))
+        fig.add_trace(go.Scatter(x=long_distance['distance'], 
+                        y=long_distance['time_taken(min)'],
+                        mode='markers',
+                        name='Long Distance'))
+
+        '''
         fig = px.scatter(
             distance_impact,
             x='distance',
@@ -73,6 +90,7 @@ def display_delivery_analysis(data: pd.DataFrame) -> None:
             trendline="ols",
             title="Delivery Time vs Distance"
         )
+        '''
         st.plotly_chart(fig, use_container_width=True)
         
 """

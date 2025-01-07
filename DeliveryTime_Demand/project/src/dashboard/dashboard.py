@@ -40,7 +40,7 @@ def main():
             #filters = create_filters(data)
             #filters = create_filters()
             #filtered_data = filters.apply_filters(data)
-            #date_range, weather, traffic = create_filters()
+            date_range, weather, traffic = create_filters()
             filtered_data = filter_data(data, date_range, weather, traffic)
             
             # Display components
