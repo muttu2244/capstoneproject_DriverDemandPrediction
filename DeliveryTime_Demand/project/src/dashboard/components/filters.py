@@ -15,8 +15,10 @@ def create_filters() -> Tuple[Any, str, str]:
     st.sidebar.header("📊 Filters")
     
     # Date range filter
-    default_start = datetime.now() - timedelta(days=30)
-    default_end = datetime.now()
+    #default_start = datetime.now() - timedelta(days=30)
+    #default_end = datetime.now()
+    default_start = datetime(2022, 2, 15)  # Date format: year, month, day
+    default_end = datetime(2022, 4, 15)
     date_range = st.sidebar.date_input(
         "Date Range",
         value=(default_start, default_end),

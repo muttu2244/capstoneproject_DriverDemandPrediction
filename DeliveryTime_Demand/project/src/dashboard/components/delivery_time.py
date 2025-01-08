@@ -63,7 +63,7 @@ def display_delivery_analysis(data: pd.DataFrame) -> None:
             title="Delivery Time by Traffic Level"
         )
         st.plotly_chart(fig, use_container_width=True)
-        
+        """
         # Distance impact
         st.subheader("📍 Distance Impact")
         distance_impact = analyze_distance_impact(data)
@@ -81,6 +81,57 @@ def display_delivery_analysis(data: pd.DataFrame) -> None:
                         y=long_distance['time_taken(min)'],
                         mode='markers',
                         name='Long Distance'))
+        """
+        
+        st.subheader("📍 Distance Impact")
+        distance_impact = analyze_distance_impact(data)
+
+        # Split into short and long distance
+        short_distance = distance_impact[distance_impact['distance'] < 10000]
+        long_distance = distance_impact[distance_impact['distance'] >= 10000]
+
+        # Create figure with both groups using plotly express
+        fig = px.scatter(
+            distance_impact,
+            x='distance',
+            y='time_taken(min)',
+            color=distance_impact['distance'].apply(lambda x: 'Short Distance' if x < 10000 else 'Long Distance'),
+            title="Delivery Time vs Distance",
+            trendline="ols",
+            color_discrete_sequence=['blue', 'red']
+        )
+
+        # Customize the layout
+        fig.update_layout(
+            legend_title_text='Distance Type',
+            xaxis_title='Distance (km)',
+            yaxis_title='Time Taken (min)',
+            hovermode='closest',
+            showlegend=True
+        )
+
+        # Add hover information
+        fig.update_traces(
+            hovertemplate="<br>".join([
+                "Distance: %{x:.2f} km",
+                "Time: %{y:.1f} min",
+                "<extra></extra>"
+            ])
+        )
+
+        #st.plotly_chart(fig, use_container_width=True)
+
+        # Optional: Add statistical insights
+        with st.expander("📊 Distance Analysis Insights"):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("Short Distance Stats:")
+                st.write(f"Average Time: {short_distance['time_taken(min)'].mean():.2f} min")
+                st.write(f"Count: {len(short_distance)}")
+            with col2:
+                st.write("Long Distance Stats:")
+                st.write(f"Average Time: {long_distance['time_taken(min)'].mean():.2f} min")
+                st.write(f"Count: {len(long_distance)}")
 
         '''
         fig = px.scatter(
