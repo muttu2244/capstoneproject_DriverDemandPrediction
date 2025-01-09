@@ -2,7 +2,7 @@
 import pandas as pd
 from typing import Dict, Any
 from src.models.model_evaluator import ModelEvaluator
-from .data_preparation import prepare_training_data
+from src.models.training.data_preparation import prepare_training_data
 
 class ModelTrainer:
     def __init__(self):
