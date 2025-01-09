@@ -45,7 +45,7 @@ def display_demand_analysis(data: pd.DataFrame) -> None:
 
         # Calculate average daily orders
         avg_daily_orders = data.groupby('Order_Date')['order_count'].sum().mean()
-
+        
         # Display metric
         st.metric("Avg Daily Orders", f"{avg_daily_orders:.0f}")
         
@@ -156,11 +156,14 @@ def analyze_daily_demand(data: pd.DataFrame) -> pd.DataFrame:
     """Analyze daily demand patterns."""
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     data['day_of_week'] = data['Order_Date'].dt.weekday
+    
+    #data['day_of_week'] = data.groupby('Order_Date')['order_count'].dt.weekday
 
+    #daily = data.groupby('day_of_week')['order_count'].count().reset_index(name='orders')
     daily = data.groupby('day_of_week').size().reset_index(name='orders')
     daily['day'] = daily['day_of_week'].map(lambda x: days[int(x)] if str(x).isdigit() else x)
-    #return daily[['day', 'orders']]
-    return daily
+    return daily[['day', 'orders']]
+    #return daily
 
 
 
@@ -341,4 +344,4 @@ def calculate_drivers_needed(data: pd.DataFrame) -> int:
     """Calculate estimated number of drivers needed."""
     hourly_orders = data.groupby('hour').size()
     peak_orders = hourly_orders.max()
-    return int(peak_orders / 3)  # Assuming 3 orders per driver during peak
+    return int(peak_orders / 5)  # Assuming 3 orders per driver during peak

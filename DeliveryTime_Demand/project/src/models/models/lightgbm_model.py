@@ -2,7 +2,7 @@
 import lightgbm as lgb
 from typing import Dict, Any
 import numpy as np
-from ..base_model import BaseModel
+from src.models.base_model import BaseModel
 
 class LightGBMModel(BaseModel):
     def __init__(self):

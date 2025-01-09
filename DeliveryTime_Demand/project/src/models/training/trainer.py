@@ -1,7 +1,7 @@
 """Model training orchestration."""
 import pandas as pd
 from typing import Dict, Any
-from ..model_evaluator import ModelEvaluator
+from src.models.model_evaluator import ModelEvaluator
 from .data_preparation import prepare_training_data
 
 class ModelTrainer:

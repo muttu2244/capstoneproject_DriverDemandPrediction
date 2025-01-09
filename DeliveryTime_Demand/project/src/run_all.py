@@ -78,7 +78,7 @@ def main():
     """Main function to orchestrate the components."""
     try:
         # Train models and make predictions
-        train_and_predict()
+        #train_and_predict()
 
         # Start the dashboard in a separate process
         dashboard_process = Process(target=run_dashboard)
